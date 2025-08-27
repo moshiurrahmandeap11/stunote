@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { AuthContext } from '../../contexts/AuthContexts/AuthContexts';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth } from '../../firebase/firebase.config';
+
+
+
 const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+const githubProvider = new GithubAuthProvider();
 
 
 const AuthProvider = ({ children }) => {
@@ -12,6 +17,16 @@ const AuthProvider = ({ children }) => {
     // google provider
     const googleLogin = () => {
         return signInWithPopup(auth, googleProvider)
+    }
+
+    // facebook provider
+    const facebookLogin = () => {
+        return signInWithPopup(auth, facebookProvider)
+    }
+
+    // github provider
+    const githubLogin = () => {
+        return signInWithPopup(auth, githubProvider)
     }
 
     // email, password signup
@@ -39,6 +54,8 @@ const AuthProvider = ({ children }) => {
         loading,
         createUser,
         loginUser,
+        facebookLogin,
+        githubLogin,
     }
 
     return <AuthContext.Provider value={userInfo}>{children}</AuthContext.Provider>;
