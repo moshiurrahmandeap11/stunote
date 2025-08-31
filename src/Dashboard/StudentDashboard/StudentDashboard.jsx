@@ -15,6 +15,7 @@ import {
 import { AuthContext } from "../../contexts/AuthContexts/AuthContexts";
 import useAuth from "../../hooks/useauth/useAuth";
 import { useNavigate } from "react-router";
+import Notes from "./Notes/Notes";
 
 const StudentDashboard = () => {
   const { user, logOut, loading } = useAuth();
@@ -257,35 +258,7 @@ const StudentDashboard = () => {
         );
 
       case "Notes":
-        return (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Notes</h2>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  All Notes
-                </h3>
-                <BookOpen className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div className="space-y-3">
-                {notes.map((note) => (
-                  <div
-                    key={note.id}
-                    className="border-l-4 border-indigo-200 pl-3 py-2"
-                  >
-                    <p className="text-sm font-medium text-gray-900">
-                      {note.title}
-                    </p>
-                    <p className="text-xs text-gray-500">{note.date}</p>
-                  </div>
-                ))}
-              </div>
-              <button className="mt-4 text-indigo-600 text-sm font-medium hover:text-indigo-700 flex items-center">
-                Add new note <Plus className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-          </div>
-        );
+        return <Notes></Notes>
 
       case "Tasks":
         return (
