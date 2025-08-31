@@ -1,10 +1,12 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { AuthContext } from "../../contexts/AuthContexts/AuthContexts";
 import Loader from "../../components/Loader/Loader";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import useAuth from "../../hooks/useauth/useAuth";
+import axiosInstance from "../../hooks/Axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,7 +15,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { loginUser, googleLogin, githubLogin, facebookLogin, loading } =
-    useContext(AuthContext);
+    useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,38 +24,96 @@ const Login = () => {
 
     try {
       await loginUser(email, password);
-      navigate("/dashboard");
+      navigate("/dashboard/student");
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await googleLogin();
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Google login failed.");
-    }
-  };
 
-  const handleGithubLogin = async () => {
-    try {
-      await githubLogin();
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "GitHub login failed.");
-    }
-  };
+const handleGoogleLogin = async () => {
+  try {
+    const userCredintial = await googleLogin();
+    const user = userCredintial?.user;
 
-  const handleFacebookLogin = async () => {
+    // payload
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
     try {
-      await facebookLogin();
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Facebook login failed.");
+      await axiosInstance.post("/users", userData);
+      navigate("/dashboard/student")
+    } catch (postError) {
+      console.error(
+        "Error saving user to MongoDB:",
+        postError.response?.data || postError.message
+      );
     }
-  };
+  } catch (err) {
+    setError(err.message || "Failed to login with Google. Please try again.");
+  }
+};
+
+
+const handleGithubLogin = async () => {
+  try {
+    const result = await githubLogin();
+    const user = result?.user;
+
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axiosInstance.post("/users", userData);
+    } catch (postError) {
+      console.error(
+        "Error saving GitHub user to MongoDB:",
+        postError.response?.data || postError.message
+      );
+    }
+
+    navigate("/dashboard/student");
+  } catch (err) {
+    setError(err.message || "GitHub login failed.");
+  }
+};
+
+
+const handleFacebookLogin = async () => {
+  try {
+    const result = await facebookLogin();
+    const user = result?.user; // Firebase user object
+
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axiosInstance.post("/users", userData);
+    } catch (postError) {
+      console.error(
+        "Error saving Facebook user to MongoDB:",
+        postError.response?.data || postError.message
+      );
+    }
+
+    navigate("/dashboard/student");
+  } catch (err) {
+    setError(err.message || "Facebook login failed.");
+  }
+};
+
 
   if (loading) {
     return <Loader />;

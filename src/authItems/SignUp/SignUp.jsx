@@ -5,6 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Loader from "../../components/Loader/Loader";
+import axiosInstance from "../../hooks/Axios";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -18,22 +19,123 @@ const SignUp = () => {
     useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+
+  try {
+    const result = await createUser(email, password);
+    const user = result?.user;
+
+    // payload
+    const userData = {
+      fullName: fullName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
 
     try {
-      await createUser(email, password);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Signup failed. Please try again.");
+      await axiosInstance.post("/users", userData);
+    } catch (postError) {
+      console.error(
+        "Error saving email/password user to MongoDB:",
+        postError.response?.data || postError.message
+      );
     }
-  };
+
+    navigate("/dashboard/student");
+  } catch (err) {
+    setError(err.message || "Signup failed. Please try again.");
+  }
+};
+
+
+const handleGoogleLogin = async () => {
+  try {
+    const userCredintial = await googleLogin();
+    const user = userCredintial?.user;
+
+    // payload
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axiosInstance.post("/users", userData);
+      navigate("/dashboard/student")
+    } catch (postError) {
+      console.error(
+        "Error saving user to MongoDB:",
+        postError.response?.data || postError.message
+      );
+    }
+  } catch (err) {
+    setError(err.message || "Failed to login with Google. Please try again.");
+  }
+};
+
+const handleGithubLogin = async () => {
+  try {
+    const result = await githubLogin();
+    const user = result?.user;
+
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axiosInstance.post("/users", userData);
+    } catch (postError) {
+      console.error(
+        "Error saving GitHub user to MongoDB:",
+        postError.response?.data || postError.message
+      );
+    }
+
+    navigate("/dashboard/student");
+  } catch (err) {
+    setError(err.message || "GitHub login failed.");
+  }
+};
+
+const handleFacebookLogin = async () => {
+  try {
+    const result = await facebookLogin();
+    const user = result?.user; // Firebase user object
+
+    const userData = {
+      fullName: user?.displayName || "user",
+      email: user?.email,
+      firebaseUid: user?.uid,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await axiosInstance.post("/users", userData);
+    } catch (postError) {
+      console.error(
+        "Error saving Facebook user to MongoDB:",
+        postError.response?.data || postError.message
+      );
+    }
+
+    navigate("/dashboard/student");
+  } catch (err) {
+    setError(err.message || "Facebook login failed.");
+  }
+};
 
   const togglePassword = () => setShowPassword(!showPassword);
 
@@ -132,19 +234,19 @@ const SignUp = () => {
           {/* Social Login */}
           <div className="flex justify-center gap-4">
             <button
-              onClick={googleLogin}
+              onClick={handleGoogleLogin}
               className="p-3 rounded-full bg-white shadow hover:shadow-md transition"
             >
               <FcGoogle size={24} />
             </button>
             <button
-              onClick={facebookLogin}
+              onClick={handleFacebookLogin}
               className="p-3 rounded-full bg-blue-400 text-white shadow hover:shadow-md transition"
             >
               <FaFacebookF size={24} />
             </button>
             <button
-              onClick={githubLogin}
+              onClick={handleGithubLogin}
               className="p-3 rounded-full bg-gray-700 text-white shadow hover:shadow-md transition"
             >
               <FaGithub size={24} />
